@@ -2,20 +2,17 @@ package main
 
 import (
 	"fmt"
-	"time"
+	"log"
+	"net"
 
-	"github.com/dzhcool/genid/snow"
+	"github.com/dzhcool/genid/memcachep"
 )
 
 func main() {
-	fmt.Println("run.")
-
-	stime := time.Now()
-	for i := 0; i < 10000000; i++ {
-		snow.New().GenId()
-		// fmt.Println(fmt.Sprintf("[%d] %d", i, id))
+	port := 7075
+	ls, e := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if e != nil {
+		log.Fatalf("Got an error:  %s", e)
 	}
-	etime := time.Now()
-	uptime := etime.Sub(stime)
-	fmt.Println("use:", uptime)
+	memcachep.Listen(ls)
 }

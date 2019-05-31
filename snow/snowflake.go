@@ -6,6 +6,7 @@ package snow
 // 一共加起来刚好64位，为一个Long型。(转换成字符串后长度最多19)
 
 import (
+	"log"
 	"sync"
 	"time"
 )
@@ -47,6 +48,23 @@ func (p *snowFlake) GenId() int64 {
 	defer p.mux.Unlock()
 
 	curTimeStamp := p.GetCurTimeStamp()
+
+	if curTimeStamp < p.lastTimeStamp {
+		offset := p.lastTimeStamp - curTimeStamp
+
+		if offset <= 10 {
+			time.Sleep(time.Millisecond * time.Duration(offset*2))
+
+			curTimeStamp := p.GetCurTimeStamp()
+			if curTimeStamp < p.lastTimeStamp {
+				log.Println("clock exception, retry faild last:", p.GetCurTimeStamp, " cur:", curTimeStamp)
+				return 0
+			}
+		} else {
+			log.Println("clock exception last:", p.GetCurTimeStamp, " cur:", curTimeStamp)
+			return 0
+		}
+	}
 
 	var id int64 = 0
 	if curTimeStamp == p.lastTimeStamp {
